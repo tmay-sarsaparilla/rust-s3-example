@@ -15,6 +15,23 @@ services:
       - /localstack:/tmp/localstack
       - /var/run/docker.sock:/var/run/docker.sock
       - ./aws:/docker-entrypoint-initaws.d
+    healthcheck:
+      test: ["CMD", "awslocal", "s3api", "wait", "bucket-exists", "--bucket", "test-bucket"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
+
+  app:
+    container_name: app
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      localstack:
+        condition: service_healthy
+    environment:
+      - S3_BUCKET_NAME=test-bucket
 
 volumes:
   localstack: {}
